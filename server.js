@@ -1,23 +1,18 @@
 const express = require('express');
 const path = require('path');
 const hbs = require('express-handlebars');
+const multer = require('multer');
 
+const upload = multer();
 const app = express();
-const user = [ 
-    '/user/settings',
-    '/user/panel',
-];
 
 app.engine('.hbs', hbs());
 app.engine('hbs', hbs({ extname: 'hbs', layoutsDir: './layouts', defaultLayout: 'main' }));
 app.set('view engine', '.hbs');
 
 app.use(express.static(path.join(__dirname, '/public')));
-
-app.use(user ,(req, res, next) => {
-    if(1 + 1 == 3) next();
-    else res.send('Please, log in');
-})
+app.use(express.urlencoded({extended: false}));
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.render('index');
@@ -41,6 +36,18 @@ app.get('/info', (req, res) => {
 
 app.get('/history', (req, res) => {
   res.render('history');
+});
+
+app.post('/contact/send-message', upload.single('projectFile'), (req, res) => {
+
+  const {author, sender, title, message} = req.body;
+
+  if(author && sender && title && message && req.file) {
+    res.render('contact', { isSent: true, fileName: req.file.originalname });
+  }
+  else {
+    res.render('contact', { isError: true});
+  }
 });
 
 app.use((req, res) => {
